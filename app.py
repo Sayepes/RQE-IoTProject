@@ -11,6 +11,14 @@ app = Flask(__name__)
 #New reading from arduino
 @app.route('/read', methods=["POST"])
 def add_new_reading():
+    # JSON Object Template
+    # {
+    #     "collection_id": "dsdsdddsd",
+    #     "time": "2022-02-02 14:32",
+    #     "temp": "22.33",
+    #     "humi": "10.43",
+    #     "lumi": "67.32"
+    # }
     # Get JSON Object
     reading = request.json
     #Validate JSON Object
