@@ -13,7 +13,7 @@ app = Flask(__name__)
 def add_new_reading():
     # JSON Object Template
     # {
-    #     "collection_id": "dsdsdddsd",
+    #     "collection_id": "00000000000",
     #     "time": "2022-02-02 14:32",
     #     "temp": "22.33",
     #     "humi": "10.43",
@@ -27,11 +27,19 @@ def add_new_reading():
     if error:
         return error, 400
     #Parse JSON object
+    coll_id = reading["collection_id"]
+    time = reading["time"]
+    temp = reading["temp"]
+    humi = reading["humi"]
+    lumi = reading["lumi"]
+
+
 
     #Write to DB
+    # insert into db (coll_id, time, temp, humi, lumi)
 
     #Return Success
-    return "Complete"
+    return "Successful Log"
 
 @app.route('/')
 def hello_world():  # put application's code here
