@@ -41,7 +41,7 @@ def add_new_reading():
     if error:
         return error, 400
 
-    #Parse JSON object
+    #Parse JSON object --NOT NEEDED
     coll_id = reading["collection_id"]
     time = reading["time"]
     temp = reading["temp"]
@@ -50,9 +50,13 @@ def add_new_reading():
 
     #Write to DB
     # insert into db (coll_id, time, temp, humi, lumi)
+    try:
+        inserted_id = db.reading.insert_one(reading).inserted_id
+        reading["_id"] = str(inserted_id)
+        return jsonify(reading)
 
-    #Return Success
-    return "Successful Log Inserted"
+    except Exception as e:
+        return {"error": "some error happened"}, 500
 
 
 #Get readings from DB
