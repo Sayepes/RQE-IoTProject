@@ -40,5 +40,23 @@ def add_new_reading():
     #Return Success
     return "Successful Log Inserted"
 
+
+#Get readings from DB
+@app.route('/collection/<collection_id>', methods=["GET"])
+def get_readings_from_collection(collection_id):
+    #Select from results DB using collection_id
+    try:
+        cursor = db.results.find({"collection_id": collection_id})
+        readings = list(cursor)
+        for reading in readings:
+            if "_id" in reading:
+                reading["_id"] = str(reading["_id"])
+
+        return jsonify(readings)
+    except Exception as e:
+        print(e)
+        return {"error": "some error happened"}, 501
+
+
 if __name__ == '__main__':
     app.run()
