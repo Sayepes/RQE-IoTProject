@@ -22,10 +22,7 @@ def add_new_reading():
     # Get JSON Object
     reading = request.json
     #Validate JSON Object
-    #Schema Validation
-    error = False
-    if error:
-        return error, 400
+
     #Parse JSON object
     coll_id = reading["collection_id"]
     time = reading["time"]
@@ -33,18 +30,16 @@ def add_new_reading():
     humi = reading["humi"]
     lumi = reading["lumi"]
 
-
+    #Schema Validation
+    error = False
+    if error:
+        return error, 400
 
     #Write to DB
     # insert into db (coll_id, time, temp, humi, lumi)
 
     #Return Success
     return "Successful Log"
-
-@app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
-
 
 if __name__ == '__main__':
     app.run()
