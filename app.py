@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 # from flask_objectid_converter import ObjectIDConverter
 from pymongo import ReturnDocument
 from pymongo.server_api import ServerApi
-# from Schemas import ToDoItemSchemaPut, ToDoItemSchemaPost, ToDoItemsSchemaPatch
+from Schemas import ReadingSchemaPost
 from bson import json_util, ObjectId
 # from flask_cors import CORS
 app = Flask(__name__)
@@ -22,6 +22,10 @@ def add_new_reading():
     # Get JSON Object
     reading = request.json
     #Validate JSON Object
+    #Schema Validation
+    error = ReadingSchemaPost().validate(reading)
+    if error:
+        return error, 400
 
     #Parse JSON object
     coll_id = reading["collection_id"]
@@ -30,16 +34,11 @@ def add_new_reading():
     humi = reading["humi"]
     lumi = reading["lumi"]
 
-    #Schema Validation
-    error = False
-    if error:
-        return error, 400
-
     #Write to DB
     # insert into db (coll_id, time, temp, humi, lumi)
 
     #Return Success
-    return "Successful Log"
+    return "Successful Log Inserted"
 
 if __name__ == '__main__':
     app.run()
