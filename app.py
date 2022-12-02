@@ -98,5 +98,63 @@ def delete_collection(collection_id):
     except Exception as e:
         return {"error": "some error happened"}, 501
 
+
+# Compare data collection with inserted data
+@app.route("/collection/<collection_id>/compare/<temp>/<humi>/<lumi>", methods=["GET"])
+def compare_collection(collection_id, temp, humi, lumi):
+
+    avg_temp = None
+    avg_humi = None
+    avg_lumi = None
+
+    temp_rating = 0
+    humi_rating = 0
+    lumi_rating = 0
+
+    return_msg= {}
+
+    # Select from collection DB using collection_id
+    try:
+        cursor = db.collection.find({"collection_id": collection_id})
+        readings = list(cursor)
+        for reading in readings:
+            if "_id" in reading:
+                reading["_id"] = str(reading["_id"])
+            # assign values from avg pipelines
+            avg_temp = reading["avgTemp"]
+            avg_humi = reading["avgHumi"]
+            avg_lumi = reading["avgLumi"]
+
+        if temp.isnumeric():
+            if humi.isnumeric():
+                if lumi.isnumeric():
+                    # Calculate Percentage Rating
+                    temp_rating = (avg_temp/temp)*100
+                    humi_rating = (avg_humi/humi)*100
+                    lumi_rating = (avg_lumi/lumi)*100
+
+                    return_msg = {"Temperature": "{:.2f}%".format(temp_rating, ),
+                                 "Humidity": "{:.2f}%".format(humi_rating),
+                                 "Luminosity": "{:.2f}%".format(lumi_rating)}
+
+                    # Return Grade Percentage for all values
+                    return jsonify(return_msg)
+                else:
+                    # Return Message for invalid luminosity value
+                    return {"error": "Invalid Data for Luminosity"}, 400
+            else:
+                # Return Message for invalid humidity value
+                return {"error": "Invalid Data for Humidity"}, 400
+        else:
+            # Return Message for invalid temperature value
+            return {"error": "Invalid Data for Temperature"}, 400
+
+        # Return readings from query
+        # return jsonify(readings)
+    except Exception as e:
+        print(e)
+        return {"error": "some error happened"}, 501
+
+
 if __name__ == '__main__':
     app.run()
