@@ -7,8 +7,8 @@ from Schemas import ReadingSchemaPost
 from bson import json_util, ObjectId
 # from flask_cors import CORS
 #loading private connection information from environment variables
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 import os
 
 MONGODB_LINK = os.environ.get("MONGODB_LINK")
@@ -157,13 +157,13 @@ def compare_collection(collection_id, temp, humi, lumi):
 
 
 # Compare data collection with JSON Object
-@app.route("/collection/<collection_id>/compare/<temp>/<humi>/<lumi>", methods=["POST"])
-def compare_collection(collection_id):
+@app.route("/collection/<collection_id>/compare/", methods=["POST"])
+def compare_collection_JSON(collection_id):
     # JSON Object Template
     # {
-    #     "temp": "22.33",
-    #     "humi": "10.43",
-    #     "lumi": "67.32"
+    #     "temp": 22.33,
+    #     "humi": 10.43,
+    #     "lumi": 67.32
     # }
     # Get JSON Object
     reading = request.json
@@ -224,7 +224,67 @@ def compare_collection(collection_id):
     except Exception as e:
         print(e)
         return {"error": "some error happened"}, 501
-    
+
+
+# Compare data collection with JSON Object
+@app.route("/comparetest", methods=["POST"])
+def compare_test():
+    # JSON Object Template
+    # {
+    #     "temp": "22.33",
+    #     "humi": "10.43",
+    #     "lumi": "67.32"
+    # }
+    # Get JSON Object
+    reading = request.json
+
+    #Parse JSON object
+    temp = reading["temp"]
+    humi = reading["humi"]
+    lumi = reading["lumi"]
+
+    avg_temp = 27
+    avg_humi = 10
+    avg_lumi = 71
+
+    temp_rating = 0
+    humi_rating = 0
+    lumi_rating = 0
+
+    return_msg= {}
+
+    # Select from collection DB using collection_id
+    try:
+        if temp:
+            if humi:
+                if lumi:
+                    # Calculate Percentage Rating
+                    temp_rating = (avg_temp/temp)*100
+                    humi_rating = (avg_humi/humi)*100
+                    lumi_rating = (avg_lumi/lumi)*100
+
+                    return_msg = {"Temperature": "{:.2f}%".format(temp_rating, ),
+                                 "Humidity": "{:.2f}%".format(humi_rating),
+                                 "Luminosity": "{:.2f}%".format(lumi_rating)}
+
+                    # Return Grade Percentage for all values
+                    return jsonify(return_msg)
+                else:
+                    # Return Message for invalid luminosity value
+                    return {"error": "Invalid Data for Luminosity"}, 400
+            else:
+                # Return Message for invalid humidity value
+                return {"error": "Invalid Data for Humidity"}, 400
+        else:
+            # Return Message for invalid temperature value
+            return {"error": "Invalid Data for Temperature"}, 400
+
+        # Return readings from query
+        # return jsonify(readings)
+    except Exception as e:
+        print(e)
+        return {"error": "some error happened"}, 501
+
 
 if __name__ == '__main__':
     app.run()
