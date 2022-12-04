@@ -3,10 +3,10 @@ from flask import Flask, request, jsonify
 # from flask_objectid_converter import ObjectIDConverter
 from pymongo import ReturnDocument
 from pymongo.server_api import ServerApi
-from Schemas import ReadingSchemaPost
+from Schemas import ReadingSchemaPost, CompareSchemaPost
 from bson import json_util, ObjectId
 # from flask_cors import CORS
-#loading private connection information from environment variables
+# loading private connection information from environment variables
 # from dotenv import load_dotenv
 # load_dotenv()
 import os
@@ -16,13 +16,16 @@ MONGODB_USER = os.environ.get("MONGODB_USER")
 MONGODB_PASS = os.environ.get("MONGODB_PASS")
 
 # Connecting to mongodb
-client = pymongo.MongoClient(f"mongodb+srv://carstaltari:Pablo__545@iot2-carlo.ijsiznf.mongodb.net/?retryWrites=true&w=majority", server_api=ServerApi('1'))
+client = pymongo.MongoClient(
+    f"mongodb+srv://carstaltari:Pablo__545@iot2-carlo.ijsiznf.mongodb.net/?retryWrites=true&w=majority",
+    server_api=ServerApi('1'))
 # Name of database
 db = client.todoitem_sec1
 
 app = Flask(__name__)
 
-#New reading from arduino
+
+# New reading from arduino
 @app.route('/read', methods=["POST"])
 def add_new_reading():
     # JSON Object Template
@@ -35,21 +38,21 @@ def add_new_reading():
     # }
     # Get JSON Object
     reading = request.json
-    #Validate JSON Object
-    #Schema Validation
+    # Validate JSON Object
+    # Schema Validation
     error = ReadingSchemaPost().validate(reading)
     if error:
         return error, 400
 
-    #Parse JSON object --NOT NEEDED
+    # Parse JSON object --NOT NEEDED
     coll_id = reading["collection_id"]
     time = reading["time"]
     temp = reading["temp"]
     humi = reading["humi"]
     lumi = reading["lumi"]
 
-    #Write to DB
-    # insert into db (coll_id, time, temp, humi, lumi)
+    # Write to DB
+    # Insert into db (coll_id, time, temp, humi, lumi)
     try:
         inserted_id = db.reading.insert_one(reading).inserted_id
         reading["_id"] = str(inserted_id)
@@ -59,10 +62,10 @@ def add_new_reading():
         return {"error": "some error happened"}, 500
 
 
-#Get readings from DB
+# Get readings from DB
 @app.route('/collection/<collection_id>', methods=["GET"])
 def get_readings_from_collection(collection_id):
-    #Select from results DB using collection_id
+    # Select from results DB using collection_id
     try:
         cursor = db.results.find({"collection_id": collection_id})
         readings = list(cursor)
@@ -82,15 +85,16 @@ def get_readings_from_collection(collection_id):
 def delete_collection(collection_id):
     try:
         # Delete collection from collection table
-        deleted_collection = db.collections.find_one_and_delete({"_id":ObjectId(collection_id)}, projection={"_id":False})
+        deleted_collection = db.collections.find_one_and_delete({"_id": ObjectId(collection_id)},
+                                                                projection={"_id": False})
         if deleted_collection is None:
             return {"error": "Collection not found"}, 404
         if "_id" in deleted_collection:
             deleted_collection["_id"] = str(deleted_collection["_id"])
 
         # Delete readings from reading table
-        deleted_readings = db.results.delete_many({"collection_id":collection_id})
-        print(deleted_readings.deleted_count," readings deleted")
+        deleted_readings = db.results.delete_many({"collection_id": collection_id})
+        print(deleted_readings.deleted_count, " readings deleted")
 
         # Return deleted readings
         return jsonify(deleted_readings)
@@ -102,7 +106,6 @@ def delete_collection(collection_id):
 # Compare data collection with inserted data
 @app.route("/collection/<collection_id>/compare/<temp>/<humi>/<lumi>", methods=["GET"])
 def compare_collection(collection_id, temp, humi, lumi):
-
     avg_temp = None
     avg_humi = None
     avg_lumi = None
@@ -111,7 +114,7 @@ def compare_collection(collection_id, temp, humi, lumi):
     humi_rating = 0
     lumi_rating = 0
 
-    return_msg= {}
+    return_msg = {}
 
     # Select from collection DB using collection_id
     try:
@@ -129,13 +132,13 @@ def compare_collection(collection_id, temp, humi, lumi):
             if humi.isnumeric():
                 if lumi.isnumeric():
                     # Calculate Percentage Rating
-                    temp_rating = (avg_temp/temp)*100
-                    humi_rating = (avg_humi/humi)*100
-                    lumi_rating = (avg_lumi/lumi)*100
+                    temp_rating = (avg_temp / temp) * 100
+                    humi_rating = (avg_humi / humi) * 100
+                    lumi_rating = (avg_lumi / lumi) * 100
 
                     return_msg = {"Temperature": "{:.2f}%".format(temp_rating, ),
-                                 "Humidity": "{:.2f}%".format(humi_rating),
-                                 "Luminosity": "{:.2f}%".format(lumi_rating)}
+                                  "Humidity": "{:.2f}%".format(humi_rating),
+                                  "Luminosity": "{:.2f}%".format(lumi_rating)}
 
                     # Return Grade Percentage for all values
                     return jsonify(return_msg)
@@ -167,8 +170,12 @@ def compare_collection_JSON(collection_id):
     # }
     # Get JSON Object
     reading = request.json
+    # Schema Validation
+    error = CompareSchemaPost().validate(reading)
+    if error:
+        return error, 400
 
-    #Parse JSON object
+    # Parse JSON object
     temp = reading["temp"]
     humi = reading["humi"]
     lumi = reading["lumi"]
@@ -181,7 +188,7 @@ def compare_collection_JSON(collection_id):
     humi_rating = 0
     lumi_rating = 0
 
-    return_msg= {}
+    return_msg = {}
 
     # Select from collection DB using collection_id
     try:
@@ -199,13 +206,13 @@ def compare_collection_JSON(collection_id):
             if humi.isnumeric():
                 if lumi.isnumeric():
                     # Calculate Percentage Rating
-                    temp_rating = (avg_temp/temp)*100
-                    humi_rating = (avg_humi/humi)*100
-                    lumi_rating = (avg_lumi/lumi)*100
+                    temp_rating = (avg_temp / temp) * 100
+                    humi_rating = (avg_humi / humi) * 100
+                    lumi_rating = (avg_lumi / lumi) * 100
 
-                    return_msg = {"Temperature": "{:.2f}%".format(temp_rating, ),
-                                 "Humidity": "{:.2f}%".format(humi_rating),
-                                 "Luminosity": "{:.2f}%".format(lumi_rating)}
+                    return_msg = {"Temperature": "{:.2f}%".format(temp_rating),
+                                  "Humidity": "{:.2f}%".format(humi_rating),
+                                  "Luminosity": "{:.2f}%".format(lumi_rating)}
 
                     # Return Grade Percentage for all values
                     return jsonify(return_msg)
@@ -237,8 +244,12 @@ def compare_test():
     # }
     # Get JSON Object
     reading = request.json
+    # Schema Validation
+    error = CompareSchemaPost().validate(reading)
+    if error:
+        return error, 400
 
-    #Parse JSON object
+    # Parse JSON object
     temp = reading["temp"]
     humi = reading["humi"]
     lumi = reading["lumi"]
@@ -251,7 +262,7 @@ def compare_test():
     humi_rating = 0
     lumi_rating = 0
 
-    return_msg= {}
+    return_msg = {}
 
     # Select from collection DB using collection_id
     try:
@@ -259,13 +270,13 @@ def compare_test():
             if humi:
                 if lumi:
                     # Calculate Percentage Rating
-                    temp_rating = (avg_temp/temp)*100
-                    humi_rating = (avg_humi/humi)*100
-                    lumi_rating = (avg_lumi/lumi)*100
+                    temp_rating = (avg_temp / temp) * 100
+                    humi_rating = (avg_humi / humi) * 100
+                    lumi_rating = (avg_lumi / lumi) * 100
 
-                    return_msg = {"Temperature": "{:.2f}%".format(temp_rating, ),
-                                 "Humidity": "{:.2f}%".format(humi_rating),
-                                 "Luminosity": "{:.2f}%".format(lumi_rating)}
+                    return_msg = {"Temperature": "{:.2f}%".format(temp_rating),
+                                  "Humidity": "{:.2f}%".format(humi_rating),
+                                  "Luminosity": "{:.2f}%".format(lumi_rating)}
 
                     # Return Grade Percentage for all values
                     return jsonify(return_msg)
