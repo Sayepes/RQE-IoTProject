@@ -16,10 +16,12 @@ MONGODB_LINK = os.environ.get("MONGODB_LINK")
 MONGODB_USER = os.environ.get("MONGODB_USER")
 MONGODB_PASS = os.environ.get("MONGODB_PASS")
 
+# Connection to DB
 client = pymongo.MongoClient("mongodb+srv://Mohaned:0000@cluster0.gvkvlw9.mongodb.net/?retryWrites=true&w=majority", server_api=ServerApi('1'))
+# DB Collection
 db = client.test
 
-
+# Create Collection if doesn't exist
 if 'roomQuality' not in db.list_collection_names():
     db.create_collection("roomQuality",
                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
