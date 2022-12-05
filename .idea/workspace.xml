@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="06a40b5a-e445-49bc-abe2-cc93741b8ced" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/RQE-IoTProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RQE-IoTProject.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="06a40b5a-e445-49bc-abe2-cc93741b8ced" name="Changes" comment="Can write in the database and made some small changes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,6 +101,14 @@
       <workItem from="1669917035545" duration="40000" />
       <workItem from="1670003084456" duration="2547000" />
     </task>
+    <task id="LOCAL-00001" summary="Can write in the database and made some small changes">
+      <created>1670174259230</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1670174259230</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -116,5 +124,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Can write in the database and made some small changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Can write in the database and made some small changes" />
   </component>
 </project>
