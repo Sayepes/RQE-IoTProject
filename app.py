@@ -19,12 +19,14 @@ MONGODB_PASS = os.environ.get("MONGODB_PASS")
 # Connection to DB
 client = pymongo.MongoClient("mongodb+srv://Mohaned:0000@cluster0.gvkvlw9.mongodb.net/?retryWrites=true&w=majority", server_api=ServerApi('1'))
 # DB Collection
-db = client.test
+db = client["test"]
 
 # Create Collection if doesn't exist
 # if 'roomQuality' not in db.list_collection_names():
 #     db.create_collection("roomQuality",
 #                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
+# else:
+#     print("Room Quality collection found")
 app = Flask(__name__)
 
 
@@ -64,7 +66,6 @@ def add_new_reading():
         #     "temp": 10,
         #     "humi": 22,
         #     "lumi": 340
-        #
         # }
         print(reading)
         # Write reading in DB
