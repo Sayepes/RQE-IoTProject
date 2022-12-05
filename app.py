@@ -309,6 +309,65 @@ def compare_test():
         print(e)
         return {"error": "some error happened"}, 501
 
+    @app.route("/collection/<int:collection_Id>/readings")
+    def get_all_readings(collection_Id):
+        start = request.args.get("start")
+        end = request.args.get("end")
+
+        query = {"collection_Id": collection_Id}
+        if start is None and end is not None:
+            try:
+                end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+            except Exception as e:
+                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+            query.update({"timestamp": {"$lte": end}})
+
+        elif end is None and start is not None:
+            try:
+                start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+            except Exception as e:
+                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+            query.update({"timestamp": {"$gte": start}})
+        elif start is not None and end is not None:
+            try:
+                start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+                end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+
+            except Exception as e:
+                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+            query.update({"timestamp": {"$gte": start, "$lte": end}})
+
+        # First aggregation pipeline
+        data = list(db.roomQuality.aggregate([
+            {
+                '$match': {
+                    'collection_id': query
+                }
+            }, {
+                '$project': {
+                    'record_id': 0,
+                    '_id': 0,
+                    'collection_id': 0
+                }
+            }
+        ]))
+
+        if data:
+            data = data[0]
+            if "_id" in data:
+                del data["_id"]
+                data.update({"collection_Id": collection_Id})
+
+            for temp in data['temperatures']:
+                temp["timestamp"] = temp["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
+
+            return data
+        else:
+            return {"error": "id not found"}, 404
+
 
 if __name__ == '__main__':
     app.run()
