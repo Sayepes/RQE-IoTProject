@@ -22,20 +22,18 @@ client = pymongo.MongoClient("mongodb+srv://Mohaned:0000@cluster0.gvkvlw9.mongod
 db = client.test
 
 # Create Collection if doesn't exist
-if 'roomQuality' not in db.list_collection_names():
-    db.create_collection("roomQuality",
-                         timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
+# if 'roomQuality' not in db.list_collection_names():
+#     db.create_collection("roomQuality",
+#                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
 app = Flask(__name__)
 
 
 # New reading from arduino
 @app.route('/read', methods=["POST"])
 def add_new_reading():
-    format = dt.datetime.strptime(format, "%Y-%m-%dT%H:%M:%S")
     # JSON Object Template
     # {
     #     "collection_id": "00000000000",
-    #     "time": "2022-02-02 14:32",
     #     "temp": "22.33",
     #     "humi": "10.43",
     #     "lumi": "67.32"
@@ -50,32 +48,32 @@ def add_new_reading():
 
     # Parse JSON object --NOT NEEDED
     coll_id = reading["collection_id"]
-    time = reading["time"]
     temp = reading["temp"]
     humi = reading["humi"]
     lumi = reading["lumi"]
 
     # Write to DB
 
-    # Insert into db (coll_id, time, temp, humi, lumi)
+    # Insert into db (coll_id, temp, humi, lumi)
     try:
-        item1 = {
-            "record_id": "00001",
-            "collection_id": "00000000000",
-            "timestamp": format,
-            "sensorId": 720,
-            "temp": 10,
-            "humi": 22,
-            "lumi": 340
-
-
-        }
-        db.roomQuality.insert_one(item1)
+        # Update reading with timestamp
+        timestamp = {"timestamp": dt.datetime.now()}
+        reading.update(timestamp)
+        # item1 = {
+        #     "collection_id": "00000000000",
+        #     "temp": 10,
+        #     "humi": 22,
+        #     "lumi": 340
+        #
+        # }
+        print(reading)
+        # Write reading in DB
+        db.roomQuality.insert_one(reading)
+        return {"Insert": "Successful"}, 200
 
     except Exception as e:
         return {"error": "some error happened"}, 500
 
-    return "success"
 
 
 # Get readings from DB
@@ -310,65 +308,6 @@ def compare_test():
     except Exception as e:
         print(e)
         return {"error": "some error happened"}, 501
-
-    @app.route("/collection/<int:collection_Id>/readings")
-    def get_all_readings(collection_Id):
-        start = request.args.get("start")
-        end = request.args.get("end")
-
-        query = {"collection_Id": collection_Id}
-        if start is None and end is not None:
-            try:
-                end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
-            except Exception as e:
-                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
-
-            query.update({"timestamp": {"$lte": end}})
-
-        elif end is None and start is not None:
-            try:
-                start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
-            except Exception as e:
-                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
-
-            query.update({"timestamp": {"$gte": start}})
-        elif start is not None and end is not None:
-            try:
-                start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
-                end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
-
-            except Exception as e:
-                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
-
-            query.update({"timestamp": {"$gte": start, "$lte": end}})
-
-#First aggregation pipeline
-        data = list(db.roomQuality.aggregate([
-            {
-                '$match': {
-                    'collection_id': query
-                }
-            }, {
-                '$project': {
-                    'record_id': 0,
-                    '_id': 0,
-                    'collection_id': 0
-                }
-            }
-        ]))
-
-        if data:
-            data = data[0]
-            if "_id" in data:
-                del data["_id"]
-                data.update({"collection_Id": collection_Id})
-
-            for temp in data['temperatures']:
-                temp["timestamp"] = temp["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
-
-            return data
-        else:
-            return {"error": "id not found"}, 404
 
 
 if __name__ == '__main__':
