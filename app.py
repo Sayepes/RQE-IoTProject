@@ -22,9 +22,9 @@ client = pymongo.MongoClient("mongodb+srv://Mohaned:0000@cluster0.gvkvlw9.mongod
 db = client.test
 
 # Create Collection if doesn't exist
-if 'roomQuality' not in db.list_collection_names():
-    db.create_collection("roomQuality",
-                         timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
+# if 'roomQuality' not in db.list_collection_names():
+#     db.create_collection("roomQuality",
+#                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
 app = Flask(__name__)
 
 
@@ -34,7 +34,6 @@ def add_new_reading():
     # JSON Object Template
     # {
     #     "collection_id": "00000000000",
-    #     "time": "2022-02-02 14:32",
     #     "temp": "22.33",
     #     "humi": "10.43",
     #     "lumi": "67.32"
@@ -49,30 +48,32 @@ def add_new_reading():
 
     # Parse JSON object --NOT NEEDED
     coll_id = reading["collection_id"]
-    time = reading["time"]
     temp = reading["temp"]
     humi = reading["humi"]
     lumi = reading["lumi"]
 
     # Write to DB
 
-    # Insert into db (coll_id, time, temp, humi, lumi)
+    # Insert into db (coll_id, temp, humi, lumi)
     try:
-        item1 = {
-            "record_id": "00001",
-            "collection_id": "00000000000",
-            "timestamp": dt.datetime.now(),
-            "temp": 10,
-            "humi": 22,
-            "lumi": 340
-
-        }
-        db.roomQuality.insert_one(item1)
+        # Update reading with timestamp
+        timestamp = {"timestamp": dt.datetime.now()}
+        reading.update(timestamp)
+        # item1 = {
+        #     "collection_id": "00000000000",
+        #     "temp": 10,
+        #     "humi": 22,
+        #     "lumi": 340
+        #
+        # }
+        print(reading)
+        # Write reading in DB
+        db.roomQuality.insert_one(reading)
+        return {"Insert": "Successful"}, 200
 
     except Exception as e:
         return {"error": "some error happened"}, 500
 
-    return "success"
 
 
 # Get readings from DB
