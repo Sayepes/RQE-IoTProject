@@ -310,8 +310,44 @@ def compare_test():
         print(e)
         return {"error": "some error happened"}, 501
 
+    @app.route("/collection/avg")
+    def getallreadingsavg():
+        query = db.roomQuality.find()
+        # tempList = {}
+        #
+        # for x in query:
+        #     tempList = {'temp': x}
+
+        data = list(db.roomQuality.aggregate([
+            {
+                '$match': query
+            }, {
+                '$group': {
+                    '_id': 'none',
+                    'avgTemp': {
+                        '$avg': '$temp'
+                    },
+                    'avgHumidity': {
+                        '$avg': '$humi'
+                    },
+                    'avgLightLevels': {
+                        '$avg': '$lumi'
+                    },
+                    'Levels': {
+                        '$push': {
+                            'timestamp': '$timestamp',
+                            'temperatures': '$temp',
+                            'humidity': '$humidity',
+                            'light': '$lumi'
+
+                        }
+                    }
+                }
+            }
+        ]))
+        return data
     @app.route("/collection/<int:collection_Id>/readings")
-    def get_all_readings(collection_Id):
+    def get_all_readingsbetweentimestamp(collection_Id):
         start = request.args.get("start")
         end = request.args.get("end")
 
@@ -342,16 +378,32 @@ def compare_test():
             query.update({"timestamp": {"$gte": start, "$lte": end}})
 
         # First aggregation pipeline
+
         data = list(db.roomQuality.aggregate([
             {
-                '$match': {
-                    'collection_id': query
-                }
+                '$match': query
             }, {
-                '$project': {
-                    'record_id': 0,
-                    '_id': 0,
-                    'collection_id': 0
+                '$group': {
+                    '_id': '$collection_Id',
+                    'avgTemp': {
+                        '$avg': '$temp'
+                    },
+                    'avgHumidity': {
+                        '$avg': '$humi'
+                    },
+                    'avgLightLevels': {
+                        '$avg': '$limi'
+                    },
+                    'levels': {
+                        '$push': {
+                            'start': '$start',
+                            'end': '$end',
+                            'temperatures': '$temp',
+                            'humidity': '$humi',
+                            'light': '$lumi'
+
+                        }
+                    }
                 }
             }
         ]))
