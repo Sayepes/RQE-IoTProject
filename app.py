@@ -246,7 +246,6 @@ def compare_collection_JSON(collection_id):
         print(e)
         return {"error": "some error happened"}, 501
 
-
 # Compare data collection with JSON Object
 @app.route("/comparetest", methods=["POST"])
 def compare_test():
