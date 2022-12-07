@@ -27,6 +27,17 @@ if 'roomQuality' not in db.list_collection_names():
                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
 # else:
 #     print("Room Quality collection found")
+
+db.roomQuality.insert_one({
+    "timestamp": dt.datetime.now(),
+    "sensorId": 450,
+    "collection_id": 00000000000,
+    "temp": 45,
+    "humi": 33,
+    "lumi": 98
+})
+
+
 app = Flask(__name__)
 
 
@@ -58,6 +69,15 @@ def add_new_reading():
 
     # Insert into db (coll_id, temp, humi, lumi)
     try:
+        db.Environment.insert_one({
+            "timestamp": dt.datetime.now(),
+            "sensorId": 450,
+            "collection_id": 00000000000,
+            "temp": 11,
+            "humi": 22,
+            "lumi": 64
+        })
+
         # Update reading with timestamp
         timestamp = {"timestamp": dt.datetime.now()}
         reading.update(timestamp)
@@ -69,6 +89,7 @@ def add_new_reading():
         # }
         print(reading)
         # Write reading in DB
+
         db.roomQuality.insert_one(reading)
         return {"Insert": "Successful"}, 200
 
@@ -310,131 +331,160 @@ def compare_test():
         print(e)
         return {"error": "some error happened"}, 501
 
-    @app.route("/collection/avg")
-    def getallreadingsavg():
-        query = db.roomQuality.find()
 
-        data = list(db.roomQuality.aggregate([
-            {
-                '$match': query
-            }, {
-                '$group': {
-                    '_id': '',
-                    'avgTemp': {
-                        '$avg': '$temp'
-                    },
-                    'avgHumidity': {
-                        '$avg': '$humi'
-                    },
-                    'avgLightLevels': {
-                        '$avg': '$lumi'
-                    },
-                    'Levels': {
-                        '$push': {
-                            'timestamp': '$timestamp',
-                            'temperatures': '$temp',
-                            'humidity': '$humidity',
-                            'light': '$lumi'
 
-                        }
-                    }
-                },
-                '$project':{
-                    "_id": 0,
-                    "timestamp": 1,
-                    "temperatures": 1,
-                    "humidity": 1,
-                    "light": 1
-                }
-          }
-        ]))
-        return data
-    @app.route("/collection/<int:collection_Id>/readings")
-    def get_all_readingsbetweentimestamp(collection_Id):
-        start = request.args.get("start")
-        end = request.args.get("end")
-
-        query = {"collection_Id": collection_Id}
-        if start is None and end is not None:
-            try:
-                end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
-            except Exception as e:
-                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
-
-            query.update({"timestamp": {"$lte": end}})
-
-        elif end is None and start is not None:
-            try:
-                start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
-            except Exception as e:
-                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
-
-            query.update({"timestamp": {"$gte": start}})
-        elif start is not None and end is not None:
-            try:
-                start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
-                end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
-
-            except Exception as e:
-                return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
-
-            query.update({"timestamp": {"$gte": start, "$lte": end}})
+    # @app.route("/collection/<int:collection_Id>/readings")
+    # def get_all_readingsbetweentimestamp(collection_Id):
+    #     start = request.args.get("start")
+    #     end = request.args.get("end")
+    #
+    #     query = {"collection_Id": collection_Id}
+    #     if start is None and end is not None:
+    #         try:
+    #             end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+    #         except Exception as e:
+    #             return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+    #
+    #         query.update({"timestamp": {"$lte": end}})
+    #
+    #     elif end is None and start is not None:
+    #         try:
+    #             start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+    #         except Exception as e:
+    #             return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+    #
+    #         query.update({"timestamp": {"$gte": start}})
+    #     elif start is not None and end is not None:
+    #         try:
+    #             start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+    #             end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+    #
+    #         except Exception as e:
+    #             return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+    #
+    #         query.update({"timestamp": {"$gte": start, "$lte": end}})
 
         # First aggregation pipeline
 
-        data = list(db.roomQuality.aggregate([
-            {
-                '$match': query
+data = list(
+            db.roomQuality.aggregate([{
+                '$match': {
+                    'timestamp': {
+                        '$gte': dt.datetime.now() - dt.timedelta(days=1),
+                        '$lte': dt.datetime.now()
+
+                    }
+                }
             }, {
                 '$group': {
-                    '_id': '$collection_Id',
-                    'avgTemp': {
-                        '$avg': '$temp'
+                    '_id': {
+                        '$dateToString': {
+                            'format': '%Y-%m-%dT%H',
+                            'date': '$timestamp'
+                        }
                     },
-                    'avgHumidity': {
-                        '$avg': '$humi'
-                    },
-                    'avgLightLevels': {
-                        '$avg': '$lumi'
-                    },
-                    'levels': {
+                   'Levels': {
                         '$push': {
-                            'start': '$start',
-                            'end': '$end',
+                            'timestamp': '$timestamp',
                             'temperatures': '$temp',
                             'humidity': '$humi',
                             'light': '$lumi'
 
                         }
-                },
-                '$project': {
-                    "_id": 0,
-                    "start": 1,
-                    "end":1,
-                    "temperatures": 1,
-                    "humidity": 1,
-                    "light": 1
-
+                    }
 
                 }
+            }, {
+                '$sort': {
+                    'timestamp': 1
+                }
+            }]))
+
+print(data)
+
+
+
+dat = list(
+    db.roomQuality.aggregate(
+[
+    {
+        '$lookup': {
+            'from': 'roomQuality',
+            'localField': 'avgtemp',
+            'foreignField': 'humi',
+            'as': 'Readings'
+        }
+    }, {
+        '$group': {
+            '_id': 'Readings',
+            'avgtemp': {
+                '$avg': '$temp'
+            },
+            'avghumip': {
+                '$avg': '$humi'
+            },
+            'avglumi': {
+                '$avg': '$lumi'
             }
+        }
+    }, {
+        '$project': {
+            '_id': 0
+        }
+    }
 
-            }
-        ]))
+]))
+print(dat)
+#
+# if 'roomQualityReadings' not in db.list_collection_names():
+#     db.create_collection("roomQualityReadings",
+#                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
+#
+# data = list(
+#         db.roomQualityReadings.aggregate([{
+#             '$group': {
+#                 '_id': {
+#                     '$dateToString': {
+#                         'format': '%Y-%m-%dT%H',
+#                         'date': '$timestamp'
+#                     }
+#                 },
+#                 'averageTemp': {
+#                     '$avg': '$temp'
+#                 },
+#                 'averageHumi': {
+#                     '$avg': '$humi'
+#                 },
+#                 'averageLumi': {
+#                     '$avg': '$lumi'
+#                 },
+#                 'Levels': {
+#                     '$push': {
+#                         'timestamp': '$timestamp',
+#                         'avgtemperatures': '$temp',
+#                         'avghumidity': '$humi',
+#                         'avglight': '$lumi'
+#
+#                     }
+#                 }
+#
+#             }
+#         }, {
+#             '$sort': {
+#                 'timestamp': 1
+#             }
+#         }]))
+#
+# print(data)
 
-        if data:
-            data = data[0]
-            if "_id" in data:
-                del data["_id"]
-                data.update({"collection_Id": collection_Id})
-
-            for temp in data['temperatures']:
-                temp["timestamp"] = temp["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
-
-            return data
-        else:
-            return {"error": "id not found"}, 404
-
+# {
+#         '$lookup': {
+#             'from': 'roomQuality',
+#             'localField': 'avgtemp',
+#             'foreignField': 'lumi',
+#             'as': 'Readings'
+#         }
+#     }
 
 if __name__ == '__main__':
     app.run()
