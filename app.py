@@ -22,9 +22,9 @@ client = pymongo.MongoClient("mongodb+srv://Mohaned:0000@cluster0.gvkvlw9.mongod
 db = client["test"]
 
 # Create Collection if doesn't exist
-# if 'roomQuality' not in db.list_collection_names():
-#     db.create_collection("roomQuality",
-#                          timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
+if 'roomQuality' not in db.list_collection_names():
+    db.create_collection("roomQuality",
+                         timeseries={'timeField': 'timestamp', 'metaField': 'sensorId', 'granularity': 'minutes'})
 # else:
 #     print("Room Quality collection found")
 app = Flask(__name__)
@@ -313,17 +313,13 @@ def compare_test():
     @app.route("/collection/avg")
     def getallreadingsavg():
         query = db.roomQuality.find()
-        # tempList = {}
-        #
-        # for x in query:
-        #     tempList = {'temp': x}
 
         data = list(db.roomQuality.aggregate([
             {
                 '$match': query
             }, {
                 '$group': {
-                    '_id': 'none',
+                    '_id': '',
                     'avgTemp': {
                         '$avg': '$temp'
                     },
@@ -392,7 +388,7 @@ def compare_test():
                         '$avg': '$humi'
                     },
                     'avgLightLevels': {
-                        '$avg': '$limi'
+                        '$avg': '$lumi'
                     },
                     'levels': {
                         '$push': {
