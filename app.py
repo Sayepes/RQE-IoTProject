@@ -338,8 +338,15 @@ def compare_test():
 
                         }
                     }
+                },
+                '$project':{
+                    "_id": 0,
+                    "timestamp": 1,
+                    "temperatures": 1,
+                    "humidity": 1,
+                    "light": 1
                 }
-            }
+          }
         ]))
         return data
     @app.route("/collection/<int:collection_Id>/readings")
@@ -399,8 +406,19 @@ def compare_test():
                             'light': '$lumi'
 
                         }
-                    }
+                },
+                '$project': {
+                    "_id": 0,
+                    "start": 1,
+                    "end":1,
+                    "temperatures": 1,
+                    "humidity": 1,
+                    "light": 1
+
+
                 }
+            }
+
             }
         ]))
 
